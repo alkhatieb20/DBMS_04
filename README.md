@@ -545,6 +545,17 @@ then the SQL query.
 
 ```sql
 -- Query 5a: insert here
+-- Relational Algebra:
+-- π_{order_no, date, plate, description, hours} (σ_{cust_name='Berger, Franz'} (customer ⨝ "order" ⨝ vehicle ⨝ work_item))
+
+-- SQL Query:
+SELECT o.order_no, o.date, v.plate, w.description, w.hours
+FROM customer c
+JOIN "order" o ON c.cust_no = o.cust_no
+JOIN vehicle v ON o.plate = v.plate
+JOIN work_item w ON o.order_no = w.order_no
+WHERE c.cust_name = 'Berger, Franz'
+ORDER BY o.date, w.item_no;
 ```
 
 <details>
@@ -572,6 +583,15 @@ least one work item). Sort descending by `total_hours`.
 
 ```sql
 -- Query 5b: insert here
+SELECT m.mech_name, 
+       ROUND(SUM(w.hours), 1) AS total_hours, 
+       COUNT(DISTINCT w.order_no) AS orders
+FROM mechanic m
+JOIN work_item w ON m.mech_id = w.mech_id
+JOIN "order" o ON w.order_no = o.order_no
+WHERE o.date LIKE '2026-03-%'
+GROUP BY m.mech_id, m.mech_name
+ORDER BY total_hours DESC;
 ```
 
 <details>
@@ -603,9 +623,19 @@ Use a set-difference approach with `EXCEPT` and also write an alternative using
 ```sql
 -- Variant 1: EXCEPT
 -- Query 5c-1: insert here
+SELECT plate, model FROM vehicle
+EXCEPT
+SELECT v.plate, v.model 
+FROM vehicle v
+JOIN "order" o ON v.plate = o.plate;
 
 -- Variant 2: NOT EXISTS
 -- Query 5c-2: insert here
+SELECT plate, model 
+FROM vehicle v
+WHERE NOT EXISTS (
+    SELECT 1 FROM "order" o WHERE o.plate = v.plate
+);
 ```
 
 <details>
